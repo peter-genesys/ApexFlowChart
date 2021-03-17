@@ -356,20 +356,21 @@ var flow = (function () {
              ***********************************************************************************/
             function setVertex(
                 vertexId,
-                parentVertexName,
+                parentVertexId,
                 value,
                 x,
                 y,
                 width,
                 height,
                 style,
-                connectable
+                connectable,
+                relative
             ) {
                 util.debug.info(
                     "setVertex(vertexId " +
                     vertexId +
-                    ", parentVertexName " +
-                    parentVertexName +
+                    ", parentVertexId " +
+                    parentVertexId +
                     ", value " +
                     value +
                     ", x " +
@@ -384,17 +385,20 @@ var flow = (function () {
                     style +
                     ", connectable " +
                     connectable +
+                    ", relative " +
+                    relative +
                     ")"
                 );
                 vertices[vertexId] = graph.insertVertex(
-                    vertices[parentVertexName],
+                    vertices[parentVertexId],
                     vertexId,
                     value,
                     x,
                     y,
                     width,
                     height,
-                    style
+                    style,
+                    relative
                 );
                 vertices[vertexId].setConnectable(connectable);
             }
@@ -439,17 +443,17 @@ var flow = (function () {
              * render the data
              ***********************************************************************************/
             function render(dataModel) {
+                //find the default parent
                 vertices["parent"] = graph.getDefaultParent();
                 graph.removeCells(graph.getChildVertices(graph.getDefaultParent()));
                 graph.getModel().beginUpdate(); // Adds cells to the model in a single step
                 try {
                     $.each(dataModel, function (key, data) {
-                        // set patent id null  or empty
-                        var parentNodeId = data.parent;
-
-                        if (parentNodeId == null || parentNodeId.length != 0) {
-                            parentNodeId = "parent";
-                        }
+                        // detect null PARENT
+                        if (data.PARENT.length == 0 ) {
+                            //use the default parent
+                            data.PARENT = "parent"; 
+                        }                    
 
                         // prepare text datacon
                         var doc = mxUtils.createXmlDocument();
@@ -460,20 +464,21 @@ var flow = (function () {
                             case "vertex":
                                 setVertex(
                                     data.ID,
-                                    parentNodeId,
+                                    data.PARENT,
                                     obj,
                                     data.X,
                                     data.Y,
                                     data.WIDTH,
                                     data.HEIGHT,
                                     data.STYLE,
-                                    data.CONNECTABLE
+                                    data.CONNECTABLE,
+                                    data.RELATIVE
                                 );
                                 break;
                             case "edge":
                                 setEdge(
                                     data.ID,
-                                    parentNodeId,
+                                    data.PARENT,
                                     obj,
                                     data.SOURCE,
                                     data.TARGET,
